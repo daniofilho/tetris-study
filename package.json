@@ -1,0 +1,19 @@
+{
+  "name": "tetris-study",
+  "version": "1.0.0",
+  "description": "This is a simple study on how Tetris game works.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build --base=/tetris-study/",
+    "preview": "vite preview",
+    "fast-push": "git add . && git commit -m '.' && git push"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^4.9.3",
+    "vite": "^4.0.0"
+  }
+}
