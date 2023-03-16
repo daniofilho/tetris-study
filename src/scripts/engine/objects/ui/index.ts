@@ -95,19 +95,22 @@ class UI {
     });
 
     const nextBlock = this.#gameController.nextBlock;
-    const previewBlockWidth = sizes.blocks / 4;
+    const previewBlockWidth = sizes.blocks * 0.55;
 
     nextBlock.format.map((formatRow, rowIndex) => {
       formatRow.map((_, columnIndex) => {
         if (!this.#drawer) return;
+
+        const block = nextBlock.format[rowIndex][columnIndex];
+        if (block !== 1) return;
 
         const x = rowIndex * (previewBlockWidth + sizes.lineWidth / 4) + nextBlockX;
         const y = columnIndex * (previewBlockWidth + sizes.lineWidth / 4) + nextBlockY;
 
         this.#drawer.rectangle({
           color: colors.front,
-          y,
-          x,
+          y: y + sizes.lineWidth,
+          x: x + sizes.lineWidth,
           width: previewBlockWidth,
           height: previewBlockWidth,
         });
@@ -179,27 +182,19 @@ class UI {
       });
 
       if (this.#showInstructions) {
-        if (this.#gameController.score > 0) {
+        if (this.#gameController.isGameOver) {
           this.#drawer.text({
             color: '#FFFFFF',
             text: `Game Over!`,
-            y: config.canvas.height / 2 - 20,
-            x: config.canvas.width / 2 - 160,
-            fontSize: '16px',
-          });
-
-          this.#drawer.text({
-            color: '#FFFFFF',
-            text: `Press Space to restart`,
-            y: config.canvas.height / 2 + 20,
-            x: config.canvas.width / 2 - 260,
-            fontSize: '16px',
+            y: config.canvas.height * 0.95,
+            x: config.canvas.width * 0.64,
+            fontSize: '20px',
           });
         } else {
           this.#drawer.text({
             color: '#FFFFFF',
             text: `Press Space to start`,
-            y: config.canvas.height / 2 - 20,
+            y: config.canvas.height / 2 + 30,
             x: config.canvas.width / 2 - 160,
             fontSize: '16px',
           });
@@ -207,7 +202,7 @@ class UI {
           this.#drawer.text({
             color: '#FFFFFF',
             text: `and use Arrow Keys to move blocks`,
-            y: config.canvas.height / 2 + 20,
+            y: config.canvas.height / 2 + 60,
             x: config.canvas.width / 2 - 260,
             fontSize: '16px',
           });

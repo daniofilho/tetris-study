@@ -13,7 +13,7 @@ export const pickRandomBlock = (): IBlock => {
   const halfBlock = Math.floor(format[0].length / 2);
 
   return {
-    row: 8, //0,
+    row: 0,
     column: Math.floor(halfScreen - halfBlock),
     format,
   };

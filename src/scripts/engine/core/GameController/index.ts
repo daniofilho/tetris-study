@@ -12,6 +12,7 @@ import config from '../../../config';
 
 import { screenX, screenY } from '../../utils/calculations';
 import { pickRandomBlock } from './utils';
+import RunChecker from '../../utils/RunChecker';
 
 const { sizes, colors } = config;
 
@@ -19,6 +20,9 @@ class GameController {
   #drawer?: ICanvasDrawer;
 
   #isGameRunning: boolean = false;
+  #isGameOver: boolean = false;
+
+  #gravity: number = 1000; //
 
   #level: number = 0;
   #score: number = 0;
@@ -28,18 +32,26 @@ class GameController {
 
   #grid: number[][] = [];
 
-  #lastUpdate: number = Date.now();
-  #timerDelay: number = 1500;
+  #gravityRunChecker: RunChecker | null = null;
+  #arrowKeyMovementRunChecker: RunChecker | null = null;
+
   #aBlockHasMoved: boolean = true;
 
   constructor({ context }: IGameControllerProps) {
     this.#drawer = new CanvasDrawer({ context });
+
+    this.#gravityRunChecker = new RunChecker(this.#gravity);
+    this.#arrowKeyMovementRunChecker = new RunChecker(50);
   }
 
   // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   get isGameRunning() {
     return this.#isGameRunning;
+  }
+
+  get isGameOver() {
+    return this.#isGameOver;
   }
 
   get level() {
@@ -56,18 +68,9 @@ class GameController {
 
   // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  #canRun = (): boolean => {
-    const canRun = Date.now() - this.#lastUpdate > this.#timerDelay / this.#level;
-    if (!canRun) return false;
-
-    this.#lastUpdate = Date.now();
-    return true;
-  };
-
-  // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
   #gameOver = () => {
     this.#isGameRunning = false;
+    this.#isGameOver = true;
   };
 
   // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -81,16 +84,18 @@ class GameController {
 
   #drawGrid = () => {
     this.#grid.map((row, rowIndex) => {
-      row.map((column, columnIndex) => {
+      row.map((_, columnIndex) => {
         if (!this.#drawer) return;
 
         //don't draw off screen blocks
         if (rowIndex < sizes.blockMaxHeight) return;
 
+        const block = this.#grid[rowIndex][columnIndex];
+
         const x = screenX + sizes.blocks * columnIndex;
         const y = screenY + sizes.blocks * (rowIndex - sizes.blockMaxHeight); // - sizes.blockMaxHeight to fix x position and bring to top os screen
 
-        const isSpaceEmpty = column === 0;
+        const isSpaceEmpty = block === 0;
 
         this.#drawer.rectangle({
           color: isSpaceEmpty ? colors.gray.dark : colors.front,
@@ -111,17 +116,21 @@ class GameController {
     newColumn,
     newRow,
   }: ICanMoveBlockToNewPositionProps): boolean => {
-    if (newRow > sizes.rows + 1) return false;
-    if (newColumn > sizes.columns + 1) return false;
+    const blockWidth = format[0].length;
+    const blockHeight = format.length;
 
-    const auxGrid = [...this.#grid];
+    if (newRow + blockHeight > sizes.rows + sizes.blockMaxHeight) return false;
+    if (newColumn + blockWidth > sizes.columns) return false;
+    if (newColumn < 0) return false;
 
     let canMove = true;
 
     // First, remove this block from grid
     format.map((formatRow, rowIndex) => {
       formatRow.map((_, columnIndex) => {
-        auxGrid[rowIndex + actualRow][columnIndex + actualColumn] = 0;
+        const block = format[rowIndex][columnIndex];
+
+        if (block === 1) this.#grid[rowIndex + actualRow][columnIndex + actualColumn] = 2;
       });
     });
 
@@ -134,7 +143,20 @@ class GameController {
         const rowToMove = rowIndex + newRow;
         const columnToMove = columnIndex + newColumn;
 
-        if (auxGrid[rowToMove][columnToMove] !== 0) canMove = false;
+        const block = format[rowIndex][columnIndex];
+
+        if (block === 1 && this.#grid[rowToMove][columnToMove] === 1) {
+          canMove = false;
+        }
+      });
+    });
+
+    // Now, put the block where it was
+    format.map((formatRow, rowIndex) => {
+      formatRow.map((_, columnIndex) => {
+        const block = format[rowIndex][columnIndex];
+
+        if (block === 1) this.#grid[rowIndex + actualRow][columnIndex + actualColumn] = 1;
       });
     });
 
@@ -163,7 +185,7 @@ class GameController {
         newRow,
       })
     ) {
-      if (newRow <= sizes.blockMaxHeight) {
+      if (newRow <= sizes.blockMaxHeight && direction === 'down') {
         this.#gameOver();
         return false;
       }
@@ -173,12 +195,21 @@ class GameController {
 
     // ok, move the block
 
+    // remove from last position
+    format.map((formatRow, rowIndex) => {
+      formatRow.map((_, columnIndex) => {
+        this.#grid[rowIndex + actualRow][columnIndex + actualColumn] = 0;
+      });
+    });
+
+    // set to new position
     format.map((formatRow, rowIndex) => {
       formatRow.map((_, columnIndex) => {
         const rowToMove = rowIndex + newRow;
         const columnToMove = columnIndex + newColumn;
 
-        this.#grid[rowToMove][columnToMove] = 1;
+        const block = format[rowIndex][columnIndex];
+        if (block === 1) this.#grid[rowToMove][columnToMove] = 1;
       });
     });
 
@@ -190,6 +221,17 @@ class GameController {
     };
 
     return true;
+  };
+
+  // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  #levelUp = () => {
+    if (!this.#gravityRunChecker) return;
+
+    this.#level += 1;
+    this.#gravity /= this.#level * 0.5;
+
+    this.#gravityRunChecker.timerDelay = this.#gravity;
   };
 
   // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -208,10 +250,16 @@ class GameController {
 
   // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  #moveBlockDown = () => {
-    if (!this.#canRun()) return;
+  #activateBlockGravity = () => {
+    if (!this.#isGameRunning) return;
+
+    if (!this.#gravityRunChecker) return;
+
+    if (!this.#gravityRunChecker.canRun()) return;
 
     if (!this.#aBlockHasMoved) {
+      this.#aBlockHasMoved = true;
+      this.#gravityRunChecker.resetTimer();
       return this.#pickNewBlock();
     }
 
@@ -224,9 +272,9 @@ class GameController {
   };
 
   moveBlock = (direction: IMovementDirection) => {
-    //if (!this.#canRun()) return;
+    if (!this.#arrowKeyMovementRunChecker) return;
 
-    console.log(direction);
+    if (!this.#arrowKeyMovementRunChecker.canRun()) return;
 
     this.#moveBlockToPositionOnGrid({
       actualColumn: this.#currentBlock.column,
@@ -241,6 +289,7 @@ class GameController {
   #reset = () => {
     this.#level = 1;
     this.#score = 0;
+    this.#isGameOver = false;
 
     this.#resetGrid();
     this.#pickNewBlock();
@@ -254,10 +303,11 @@ class GameController {
   };
 
   render = ({}: IRenderObjectProps) => {
-    if (!this.#isGameRunning || !this.#drawer) return;
+    if (!this.#drawer) return;
 
     this.#drawGrid();
-    this.#moveBlockDown();
+
+    this.#activateBlockGravity();
   };
 }
 

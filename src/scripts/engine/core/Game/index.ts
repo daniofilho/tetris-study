@@ -25,7 +25,6 @@ class Game {
   #drawer: ICanvasDrawer | null;
 
   #keysDown: any = {}; // TODO correct type this
-  #keysPressed: any = {}; // TODO correct type this
 
   constructor() {
     // turn off image aliasing
@@ -55,15 +54,6 @@ class Game {
       'keydown',
       (e) => {
         this.#keysDown[e.key] = true;
-      },
-      false
-    );
-
-    window.addEventListener(
-      'keypress',
-      (e) => {
-        console.log(e);
-        this.#keysPressed[e.key] = true;
       },
       false
     );
