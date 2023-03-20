@@ -68,13 +68,30 @@ class Game {
   };
 
   #handleKeyPress = (): void => {
-    if (this.#keysDown['ArrowLeft']) this.#gameController?.moveBlock('left');
+    if (this.#keysDown['ArrowLeft']) {
+      this.#gameController?.moveBlock('left');
+      this.#keysDown['ArrowLeft'] = false;
+    }
 
-    if (this.#keysDown['ArrowRight']) this.#gameController?.moveBlock('right');
+    if (this.#keysDown['ArrowRight']) {
+      this.#gameController?.moveBlock('right');
+      this.#keysDown['ArrowRight'] = false;
+    }
 
-    if (this.#keysDown['ArrowDown']) this.#gameController?.moveBlock('down');
+    if (this.#keysDown['ArrowDown']) {
+      this.#gameController?.moveBlock('down');
+      this.#keysDown['ArrowDown'] = false;
+    }
 
-    if (this.#keysDown[' ']) this.#gameController?.start();
+    if (this.#keysDown['ArrowUp']) {
+      this.#gameController?.rotateBlock();
+      this.#keysDown['ArrowUp'] = false;
+    }
+
+    if (this.#keysDown[' ']) {
+      this.#gameController?.start();
+      this.#keysDown[' '] = false;
+    }
   };
 
   // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

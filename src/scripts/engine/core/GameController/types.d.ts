@@ -1,24 +1,38 @@
 export interface IGameControllerProps extends IObjectProps {}
 
-export type BlockFormat = number[][];
+export type IBlockFormat = number[][];
+
+export interface ICanMoveReturn {
+  can: boolean;
+  reason: 'block' | 'wall' | 'out-of-screen' | '';
+}
 
 export interface IBlock {
   row: number;
   column: number;
-  format: BlockFormat;
+  variations: IBlockFormat[];
+  currentVariationIndex: number;
 }
 
-export type IMovementDirection = 'left' | 'right' | 'down';
+export type IMovementDirection = 'left' | 'right' | 'down' | 'idle';
 
 export interface IMoveBlockToNewPositionProps {
   actualRow: number;
   actualColumn: number;
   direction: IMovementDirection;
-  format: BlockFormat;
+  format: IBlockFormat;
+  debug?: boolean;
 }
 
 export interface ICanMoveBlockToNewPositionProps
   extends Omit<IMoveBlockToNewPositionProps, 'direction'> {
   newRow: number;
   newColumn: number;
+}
+
+export interface ICanRotateBlockToNewPositionProps
+  extends Omit<IMoveBlockToNewPositionProps, 'direction'> {
+  newRow: number;
+  newColumn: number;
+  oldFormat: IBlockFormat;
 }

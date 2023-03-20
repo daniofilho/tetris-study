@@ -12,8 +12,6 @@ import {
   informationX,
   screenX,
   screenY,
-  topLeftCornerX,
-  topLeftCornerY,
   screenHeight,
   screenWidth,
   informationHeight,
@@ -97,11 +95,11 @@ class UI {
     const nextBlock = this.#gameController.nextBlock;
     const previewBlockWidth = sizes.blocks * 0.55;
 
-    nextBlock.format.map((formatRow, rowIndex) => {
+    nextBlock.variations[0].map((formatRow, rowIndex) => {
       formatRow.map((_, columnIndex) => {
         if (!this.#drawer) return;
 
-        const block = nextBlock.format[rowIndex][columnIndex];
+        const block = nextBlock.variations[0][rowIndex][columnIndex];
         if (block !== 1) return;
 
         const x = rowIndex * (previewBlockWidth + sizes.lineWidth / 4) + nextBlockX;
