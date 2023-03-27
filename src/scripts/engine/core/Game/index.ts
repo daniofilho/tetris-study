@@ -4,6 +4,7 @@ import UI from '../../objects/ui';
 import GameController from '../GameController';
 import CanvasDrawer from '../../core/CanvasDrawer';
 import { ICanvasDrawer } from '../CanvasDrawer/types';
+import SoundManager from '../../objects/SoundManager';
 
 class Game {
   // Game Loop Control
@@ -21,6 +22,7 @@ class Game {
 
   #ui?: UI;
   #gameController?: GameController;
+  #soundManager?: SoundManager;
 
   #drawer: ICanvasDrawer | null;
 
@@ -33,10 +35,13 @@ class Game {
     this.#canvas.width = config.canvas.width;
     this.#canvas.height = config.canvas.height;
 
+    this.#soundManager = new SoundManager();
+
     // Objects
 
     this.#gameController = new GameController({
       context: this.#context,
+      soundManager: this.#soundManager,
     });
 
     this.#ui = new UI({
@@ -157,8 +162,7 @@ class Game {
     this.#startEventListeners();
     this.#startNewGame();
 
-    // !DEBUG
-    this.#gameController?.start();
+    this.#soundManager?.soundtrackSound?.play();
   };
 }
 

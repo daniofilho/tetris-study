@@ -21,3 +21,11 @@ export const pickRandomBlock = (): IBlock => {
     currentVariationIndex,
   };
 };
+
+export const generateEmptyLine = () => {
+  return new Array(config.sizes.columns).fill(0);
+};
+
+export const generateCompletedLine = () => {
+  return new Array(config.sizes.columns).fill(1);
+};

@@ -1,4 +1,8 @@
-export interface IGameControllerProps extends IObjectProps {}
+import SoundManager from '../../objects/SoundManager';
+
+export interface IGameControllerProps extends IObjectProps {
+  soundManager: SoundManager;
+}
 
 export type IBlockFormat = number[][];
 

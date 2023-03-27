@@ -23,6 +23,11 @@ const { colors, canvas, sizes } = config;
 
 const { lineWidth, blocksArea } = sizes;
 
+import imageLeftArrow from '../../../../assets/images/arrow-left.png';
+import imageRightArrow from '../../../../assets/images/arrow-right.png';
+import imageDownArrow from '../../../../assets/images/arrow-down.png';
+import imageUpArrow from '../../../../assets/images/arrow-up.png';
+
 class UI {
   #drawer?: ICanvasDrawer;
   #gameController?: IGameController;
@@ -31,9 +36,38 @@ class UI {
   #instructionsTimer: number = 0;
   #maxInstructionsTimer: number = 10;
 
+  #leftArrowImageDOM?: HTMLImageElement;
+  #rightArrowImageDOM?: HTMLImageElement;
+  #upArrowImageDOM?: HTMLImageElement;
+  #downArrowImageDOM?: HTMLImageElement;
+
   constructor({ context, gameController }: IUIProps) {
     this.#drawer = new CanvasDrawer({ context });
     this.#gameController = gameController;
+
+    const leftArrowImage = new Image();
+    leftArrowImage.src = imageLeftArrow;
+    leftArrowImage.onload = () => {
+      this.#leftArrowImageDOM = leftArrowImage;
+    };
+
+    const rightArrowImage = new Image();
+    rightArrowImage.src = imageRightArrow;
+    rightArrowImage.onload = () => {
+      this.#rightArrowImageDOM = rightArrowImage;
+    };
+
+    const upArrowImage = new Image();
+    upArrowImage.src = imageUpArrow;
+    upArrowImage.onload = () => {
+      this.#upArrowImageDOM = upArrowImage;
+    };
+
+    const downArrowImage = new Image();
+    downArrowImage.src = imageDownArrow;
+    downArrowImage.onload = () => {
+      this.#downArrowImageDOM = downArrowImage;
+    };
   }
 
   // * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -102,8 +136,8 @@ class UI {
         const block = nextBlock.variations[0][rowIndex][columnIndex];
         if (block !== 1) return;
 
-        const x = rowIndex * (previewBlockWidth + sizes.lineWidth / 4) + nextBlockX;
-        const y = columnIndex * (previewBlockWidth + sizes.lineWidth / 4) + nextBlockY;
+        const x = columnIndex * (previewBlockWidth + sizes.lineWidth / 4) + nextBlockX;
+        const y = rowIndex * (previewBlockWidth + sizes.lineWidth / 4) + nextBlockY;
 
         this.#drawer.rectangle({
           color: colors.front,
@@ -166,7 +200,82 @@ class UI {
     });
   };
 
-  #drawStartInstructions = ({ deltaTime }: IRenderObjectProps) => {
+  #drawControlsInstructions = () => {
+    if (
+      !this.#drawer ||
+      !this.#downArrowImageDOM ||
+      !this.#upArrowImageDOM ||
+      !this.#rightArrowImageDOM ||
+      !this.#leftArrowImageDOM
+    )
+      return;
+
+    this.#drawer.text({
+      color: colors.front,
+      text: `Move blocks:`,
+      y: config.canvas.height * 0.55,
+      x: informationX + lineWidth,
+      fontSize: '14px',
+    });
+
+    this.#drawer.image({
+      image: this.#leftArrowImageDOM,
+      destinationWidth: 124,
+      destinationHeight: 124,
+      destinationX: informationX + lineWidth,
+      destinationY: config.canvas.height * 0.58,
+      width: 64,
+      height: 64,
+      x: 0,
+      y: 0,
+    });
+
+    this.#drawer.image({
+      image: this.#rightArrowImageDOM,
+      destinationWidth: 124,
+      destinationHeight: 124,
+      destinationX: informationX + lineWidth + 70,
+      destinationY: config.canvas.height * 0.58,
+      width: 64,
+      height: 64,
+      x: 0,
+      y: 0,
+    });
+
+    this.#drawer.image({
+      image: this.#downArrowImageDOM,
+      destinationWidth: 124,
+      destinationHeight: 124,
+      destinationX: informationX + lineWidth + 140,
+      destinationY: config.canvas.height * 0.58,
+      width: 64,
+      height: 64,
+      x: 0,
+      y: 0,
+    });
+
+    this.#drawer.text({
+      color: colors.front,
+      text: `Rotate blocks:`,
+      y: config.canvas.height * 0.72,
+      x: informationX + lineWidth,
+      fontSize: '14px',
+    });
+
+    this.#drawer.image({
+      image: this.#upArrowImageDOM,
+      destinationWidth: 124,
+      destinationHeight: 124,
+      destinationX: informationX + lineWidth,
+      destinationY: config.canvas.height * 0.75,
+      width: 64,
+      height: 64,
+      x: 0,
+      y: 0,
+    });
+  };
+
+  #drawStartOrGameOver = ({ deltaTime }: IRenderObjectProps) => {
     if (!this.#drawer || !this.#gameController) return;
 
     // * Instructions blinking only if the games hasn't started yet
@@ -230,10 +339,9 @@ class UI {
 
   render = (props: IRenderObjectProps): void => {
     this.#drawScreen();
-
     this.#drawStatistics();
-
-    this.#drawStartInstructions(props);
+    this.#drawControlsInstructions();
+    this.#drawStartOrGameOver(props);
   };
 }
 
